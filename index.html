@@ -3,246 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vòng Quay May Mắn - Nhà Thuốc Bảo Ngọc</title>
+    <title>Vòng Quay May Mắn - Bảo Ngọc</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Be Vietnam Pro', sans-serif; overflow-x: hidden; }
-        .wheel-container { position: relative; width: 320px; height: 320px; border-radius: 50%; border: 8px solid #FFD700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); overflow: hidden; }
-        @media (min-width: 640px) { .wheel-container { width: 400px; height: 400px; } }
-        .wheel-canvas { width: 100%; height: 100%; transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
-        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 38px solid #ef4444; z-index: 30; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
-        .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(8px); }
-        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 40px rgba(239,68,68,0.8); } }
-        .spin-btn-glow { animation: pulse-glow 2s infinite; }
-        @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0deg); opacity:1; } 100% { transform: translateY(500px) rotate(720deg); opacity:0; } }
-        .confetti { position: absolute; border-radius: 3px; animation: confetti-fall 3s ease-out forwards; pointer-events: none; }
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-        .fade-in-up { animation: fadeInUp 0.5s ease-out; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .wheel-outer { position: relative; width: 320px; height: 320px; }
+        @media (min-width: 768px) { .wheel-outer { width: 380px; height: 380px; } }
+        .wheel-border { position: absolute; inset: -12px; border-radius: 50%; background: conic-gradient(from 0deg, #fbbf24, #f59e0b, #fbbf24, #eab308, #fbbf24, #f59e0b, #fbbf24, #eab308, #fbbf24, #f59e0b, #fbbf24, #eab308); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4), inset 0 0 20px rgba(0,0,0,0.1); }
+        .wheel-border::after { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: #1e293b; }
+        .wheel-canvas-wrap { position: relative; z-index: 2; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
+        .wheel-canvas { width: 100%; height: 100%; transition: transform 5s cubic-bezier(0.15, 0.6, 0.15, 1); }
+        .pointer-wrap { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); z-index: 10; }
+        .pointer-arrow { width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 36px solid #dc2626; filter: drop-shadow(0 3px 6px rgba(220,38,38,0.5)); }
+        .pointer-dot { width: 12px; height: 12px; background: #fbbf24; border-radius: 50%; margin: -4px auto 0; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .center-hub { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #fff, #f1f5f9); border: 4px solid #fbbf24; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
+        .prize-item { transition: all 0.2s; }
+        .prize-item:hover { transform: translateX(4px); background: #f8fafc; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 200; }
+        .modal-card { background: white; border-radius: 24px; padding: 40px 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.3); border: 3px solid #fbbf24; position: relative; overflow: hidden; }
+        .modal-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b); }
+        @keyframes spin-glow { 0%,100% { box-shadow: 0 8px 25px rgba(239,68,68,0.4); } 50% { box-shadow: 0 8px 40px rgba(239,68,68,0.7); } }
+        .btn-spin { animation: spin-glow 2s infinite; }
+        .btn-spin:disabled { animation: none; }
+        @keyframes confetti-fall { 0% { transform: translateY(-10px) rotate(0deg); opacity: 1; } 100% { transform: translateY(450px) rotate(720deg); opacity: 0; } }
+        .confetti-piece { position: absolute; border-radius: 3px; animation: confetti-fall 3s ease-out forwards; pointer-events: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+        .share-banner { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 2px solid #6ee7b7; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-slate-800 min-h-screen">
+<body class="bg-gradient-to-b from-slate-50 via-white to-blue-50 min-h-screen">
 
-<div id="app" class="container mx-auto p-4 max-w-5xl relative min-h-screen pb-20">
+<!-- MAIN APP -->
+<div id="app" class="min-h-screen">
 
-    <div id="app-content">
-        <!-- Header -->
-        <div class="text-center mb-8 mt-4 bg-white py-8 px-4 rounded-3xl shadow-sm border border-slate-100 relative">
-            <button id="admin-toggle-btn" class="absolute top-4 right-4 text-slate-300 hover:text-slate-600 transition-colors p-2 rounded-lg hover:bg-slate-100" title="Quản trị viên">⚙️</button>
-            <h2 class="text-3xl font-black text-blue-900 mb-1">NHÀ THUỐC BẢO NGỌC</h2>
-            <p class="text-red-600 font-bold tracking-widest text-sm uppercase mb-4">OffiSanté Bảo Ngọc VN</p>
-            <div class="h-1.5 w-20 bg-yellow-400 mx-auto rounded-full"></div>
-        </div>
-
-        <!-- Registration View -->
-        <div id="registration-view" class="max-w-md mx-auto fade-in-up">
-            <div class="bg-white p-8 rounded-3xl shadow-xl border border-blue-50">
-                <h3 class="text-xl font-bold text-center mb-6 text-slate-800">Nhập thông tin nhận lượt quay</h3>
-                <form id="register-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-600 mb-1">Họ và Tên</label>
-                        <input type="text" id="user-name" placeholder="Nguyễn Văn A" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-600 mb-1">Số Điện Thoại</label>
-                        <input type="tel" id="user-phone" placeholder="09xx xxx xxx" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" required>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-700 text-white font-bold py-4 rounded-2xl hover:bg-blue-800 shadow-lg shadow-blue-200 transition-all active:scale-95">XÁC NHẬN</button>
-                </form>
-                <p class="text-[10px] text-slate-400 text-center mt-6 uppercase tracking-wider">* Mỗi khách hàng chỉ nhận 01 lượt quay mặc định</p>
+    <!-- HEADER -->
+    <header class="bg-white shadow-sm border-b border-slate-100 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-900 rounded-xl flex items-center justify-center">
+                    <span class="text-white font-black text-sm">BN</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black text-blue-900 leading-tight">Nhà thuốc Bảo Ngọc</h1>
+                    <p class="text-[10px] text-slate-400 tracking-widest uppercase">OffiSanté Bảo Ngọc VN</p>
+                </div>
             </div>
+            <button id="admin-toggle-btn" class="text-slate-300 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100 transition" title="Quản trị viên">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
         </div>
+    </header>
 
-        <!-- Wheel View -->
-        <div id="wheel-view" class="hidden">
-            <div class="flex flex-col items-center gap-10">
-                <div class="relative scale-90 sm:scale-100">
-                    <div class="pointer"></div>
-                    <div class="wheel-container">
+    <!-- TITLE SECTION -->
+    <section class="text-center py-6 px-4">
+        <h2 class="text-3xl md:text-4xl font-black text-red-600 tracking-tight uppercase">Vòng Quay May Mắn</h2>
+        <p class="text-slate-500 text-sm mt-1">Chương trình tri ân lớn nhất năm</p>
+    </section>
+
+    <!-- REGISTRATION VIEW -->
+    <div id="registration-view" class="max-w-md mx-auto px-4 pb-10 animate-fadeIn">
+        <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <span class="text-3xl">🎫</span>
+            </div>
+            <h3 class="text-xl font-bold text-center mb-1 text-slate-800">Đăng ký nhận lượt quay</h3>
+            <p class="text-sm text-slate-400 text-center mb-6">Nhập thông tin để tham gia chương trình</p>
+            <form id="register-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Họ và Tên</label>
+                    <input type="text" id="user-name" placeholder="Nguyễn Văn A" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Số Điện Thoại</label>
+                    <input type="tel" id="user-phone" placeholder="09xx xxx xxx" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-[0.98] text-sm">XÁC NHẬN THAM GIA</button>
+            </form>
+            <p class="text-[10px] text-slate-400 text-center mt-5">* Mỗi khách hàng nhận 01 lượt quay. Chia sẻ để +1 lượt.</p>
+        </div>
+    </div>
+
+    <!-- WHEEL VIEW -->
+    <div id="wheel-view" class="hidden px-4 pb-16 max-w-6xl mx-auto">
+        <div class="flex flex-col lg:flex-row items-center lg:items-start gap-8 lg:gap-12 justify-center">
+
+            <!-- LEFT: Wheel -->
+            <div class="flex flex-col items-center gap-6">
+                <div class="wheel-outer">
+                    <div class="wheel-border"></div>
+                    <div class="pointer-wrap">
+                        <div class="pointer-arrow"></div>
+                        <div class="pointer-dot"></div>
+                    </div>
+                    <div class="wheel-canvas-wrap">
                         <canvas id="wheel-canvas" class="wheel-canvas" width="400" height="400"></canvas>
                     </div>
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div class="w-16 h-16 bg-white rounded-full shadow-xl border-4 border-yellow-400 z-40 flex items-center justify-center font-black text-blue-900 text-xs">BN</div>
+                    <div class="center-hub">
+                        <span class="font-black text-blue-900 text-xs">BN</span>
                     </div>
                 </div>
 
-                <div class="flex flex-col items-center gap-5 w-full max-w-sm">
-                    <button id="spin-button" class="w-full bg-red-600 text-white font-black py-5 px-10 rounded-2xl text-2xl shadow-xl hover:bg-red-700 transition transform hover:scale-105 active:scale-95 disabled:bg-slate-300 disabled:scale-100 disabled:shadow-none spin-btn-glow">QUAY NGAY</button>
-                    <div class="flex items-center gap-4 w-full">
-                        <div class="flex-1 bg-white p-4 rounded-2xl border border-slate-200 text-center">
-                            <p class="text-xs text-slate-500 font-bold uppercase mb-1">Lượt còn lại</p>
-                            <span id="turns-display" class="text-3xl font-black text-blue-700">0</span>
-                        </div>
-                        <div class="flex-1 bg-white p-4 rounded-2xl border border-slate-200 text-center">
-                            <p class="text-xs text-slate-500 font-bold uppercase mb-1">Trạng thái</p>
-                            <span id="user-status" class="text-xs font-bold text-emerald-600">Sẵn sàng</span>
-                        </div>
-                    </div>
-                    <button id="share-button" class="w-full bg-emerald-100 text-emerald-700 font-bold py-4 rounded-2xl border-2 border-emerald-200 hover:bg-emerald-200 transition-all flex items-center justify-center gap-2">
-                        <span>📢 Chia sẻ để nhận thêm 1 lượt</span>
-                    </button>
-                </div>
-            </div>
-            <div class="mt-14 max-w-lg mx-auto">
-                <h3 class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs mb-5">Danh sách quà tặng</h3>
-                <div id="prize-inventory" class="grid grid-cols-1 gap-2"></div>
-            </div>
-        </div>
+                <!-- Spin Button -->
+                <button id="spin-button" class="bg-red-600 text-white font-black py-4 px-16 rounded-2xl text-xl shadow-xl hover:bg-red-700 transition transform hover:scale-105 active:scale-95 disabled:bg-slate-300 disabled:shadow-none disabled:transform-none btn-spin uppercase tracking-wide">Quay!</button>
 
-        <!-- Admin View -->
-        <div id="admin-view" class="hidden max-w-4xl mx-auto fade-in-up">
-            <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-bold text-slate-800">📋 Danh Sách Khách Hàng</h3>
-                    <button id="admin-back-btn" class="bg-slate-100 text-slate-600 font-bold py-2 px-4 rounded-xl hover:bg-slate-200 transition-all text-sm">← Quay lại</button>
+                <!-- Info row -->
+                <div class="flex items-center gap-3 w-full max-w-xs">
+                    <div class="flex-1 bg-white p-3 rounded-xl border border-slate-200 text-center shadow-sm">
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Lượt quay</p>
+                        <span id="turns-display" class="text-2xl font-black text-blue-700">0</span>
+                    </div>
+                    <div class="flex-1 bg-white p-3 rounded-xl border border-slate-200 text-center shadow-sm">
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Trạng thái</p>
+                        <span id="user-status" class="text-[11px] font-bold text-emerald-600">Sẵn sàng</span>
+                    </div>
                 </div>
-                <div class="mb-4 flex gap-2">
-                    <input type="text" id="admin-search" placeholder="Tìm theo tên hoặc SĐT..." class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+            </div>
+
+            <!-- RIGHT: Prize List -->
+            <div class="w-full lg:w-80 flex-shrink-0">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="bg-slate-50 px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+                        <span class="text-lg">🎁</span>
+                        <h3 class="font-bold text-slate-700 text-sm">Kho quà tặng</h3>
+                    </div>
+                    <div id="prize-inventory" class="divide-y divide-slate-50"></div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="bg-slate-50 text-left">
-                                <th class="p-3 rounded-l-xl font-bold text-slate-500">#</th>
-                                <th class="p-3 font-bold text-slate-500">Họ Tên</th>
-                                <th class="p-3 font-bold text-slate-500">SĐT</th>
-                                <th class="p-3 font-bold text-slate-500">Lượt còn</th>
-                                <th class="p-3 rounded-r-xl font-bold text-slate-500">Đã chia sẻ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-customer-list"></tbody>
-                    </table>
+
+                <!-- Share Banner -->
+                <div class="mt-4 share-banner rounded-2xl p-4 text-center">
+                    <p class="text-sm font-semibold text-emerald-700 mb-2">Chia sẻ để nhận thêm 1 lượt quay!</p>
+                    <button id="share-button" class="bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-emerald-700 transition-all active:scale-95 text-sm shadow-md shadow-emerald-200">Chia sẻ ngay</button>
                 </div>
-                <p id="admin-total" class="text-xs text-slate-400 mt-4 text-right"></p>
             </div>
         </div>
     </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="admin-view" class="hidden max-w-5xl mx-auto px-4 pb-10 animate-fadeIn">
+        <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">📋 Quản lý khách hàng</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Danh sách khách hàng đã tham gia quay thưởng</p>
+                </div>
+                <button id="admin-back-btn" class="bg-slate-100 text-slate-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition text-sm">← Quay lại</button>
+            </div>
+            <div class="mb-4">
+                <input type="text" id="admin-search" placeholder="🔍 Tìm theo tên hoặc số điện thoại..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+            </div>
+            <div class="overflow-x-auto rounded-xl border border-slate-100">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-slate-50">
+                            <th class="p-3 text-left font-semibold text-slate-500 text-xs">#</th>
+                            <th class="p-3 text-left font-semibold text-slate-500 text-xs">HỌ TÊN</th>
+                            <th class="p-3 text-left font-semibold text-slate-500 text-xs">SĐT</th>
+                            <th class="p-3 text-left font-semibold text-slate-500 text-xs">LƯỢT CÒN</th>
+                            <th class="p-3 text-left font-semibold text-slate-500 text-xs">CHIA SẺ</th>
+                            <th class="p-3 text-left font-semibold text-slate-500 text-xs">QUÀ ĐÃ NHẬN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-customer-list"></tbody>
+                </table>
+            </div>
+            <p id="admin-total" class="text-xs text-slate-400 mt-3 text-right"></p>
+        </div>
+    </div>
+
 </div>
 
-<!-- Result Modal -->
-<div id="result-modal" class="modal-backdrop hidden">
-    <div class="bg-white rounded-3xl p-10 text-center max-w-sm mx-4 shadow-2xl relative overflow-hidden">
+<!-- RESULT MODAL -->
+<div id="result-modal" class="modal-overlay hidden">
+    <div class="modal-card animate-fadeIn">
         <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
         <div class="relative z-10">
-            <p id="modal-emoji" class="text-6xl mb-4">🎊</p>
-            <h2 id="modal-title" class="text-3xl font-black text-blue-900 mb-2">CHÚC MỪNG!</h2>
-            <p class="text-slate-500 mb-2">Bạn nhận được</p>
-            <p id="modal-prize-text" class="text-2xl font-black text-red-600 mb-6"></p>
-            <button id="close-modal" class="w-full bg-blue-700 text-white font-bold py-4 rounded-2xl hover:bg-blue-800 transition-all">ĐÓNG</button>
+            <div id="modal-emoji" class="text-5xl mb-3">🎉</div>
+            <h2 id="modal-title" class="text-2xl font-black text-blue-900 mb-1">CHÚC MỪNG!</h2>
+            <p class="text-slate-400 text-sm mb-3">Kết quả của bạn:</p>
+            <div class="bg-red-50 border border-red-100 rounded-xl py-3 px-6 mb-4 inline-block">
+                <p id="modal-prize-text" class="text-xl font-black text-red-600"></p>
+            </div>
+            <p class="text-xs text-slate-400 mb-5 italic">* Vui lòng chụp màn hình để nhận quà tại quầy.</p>
+            <button id="close-modal" class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-slate-800 transition-all uppercase tracking-wide text-sm">Tiếp tục</button>
         </div>
     </div>
 </div>
 
-<!-- Admin Login Modal -->
-<div id="admin-login-modal" class="modal-backdrop hidden">
-    <div class="bg-white rounded-3xl p-8 text-center max-w-sm mx-4 shadow-2xl">
-        <h3 class="text-xl font-bold text-slate-800 mb-2">🔐 Đăng Nhập Quản Trị</h3>
-        <p class="text-sm text-slate-500 mb-6">Nhập mật khẩu để truy cập</p>
-        <input type="password" id="admin-password" placeholder="Mật khẩu..." class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none mb-4 text-center text-lg tracking-widest">
-        <p id="admin-login-error" class="text-red-500 text-xs mb-4 hidden">Sai mật khẩu!</p>
+<!-- ADMIN LOGIN MODAL -->
+<div id="admin-login-modal" class="modal-overlay hidden">
+    <div class="modal-card animate-fadeIn" style="border-color: #e2e8f0;">
+        <h3 class="text-lg font-bold text-slate-800 mb-1">🔐 Quản trị viên</h3>
+        <p class="text-sm text-slate-400 mb-5">Nhập mật khẩu để truy cập</p>
+        <input type="password" id="admin-password" placeholder="••••••••" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none mb-3 text-center text-lg tracking-[0.3em]">
+        <p id="admin-login-error" class="text-red-500 text-xs mb-3 hidden font-semibold">Mật khẩu không chính xác!</p>
         <div class="flex gap-3">
-            <button id="admin-login-cancel" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-2xl hover:bg-slate-200 transition-all">Hủy</button>
-            <button id="admin-login-submit" class="flex-1 bg-blue-700 text-white font-bold py-3 rounded-2xl hover:bg-blue-800 transition-all">Xác nhận</button>
+            <button id="admin-login-cancel" class="flex-1 bg-slate-100 text-slate-600 font-semibold py-3 rounded-xl hover:bg-slate-200 transition text-sm">Hủy</button>
+            <button id="admin-login-submit" class="flex-1 bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition text-sm">Xác nhận</button>
         </div>
     </div>
 </div>
+
+</body>
+</html>
+
 
 <script>
 (function() {
+    'use strict';
+
     // ===== CONFIG =====
     const ADMIN_PASSWORD = 'baongoc2026';
-    const STORAGE_KEY = 'bn_vongquay_data';
+    const STORAGE_KEY = 'bn_vongquay_v3';
 
     const PRIZE_DATA = [
-        { id: 'p1', name: '10.000đ', quantity: 83, weight: 45, color: '#3b82f6' },
-        { id: 'p2', name: '20.000đ', quantity: 79, weight: 45, color: '#8b5cf6' },
-        { id: 'p3', name: '50.000đ', quantity: 94, weight: 10, color: '#f43f5e' },
-        { id: 'p4', name: '100.000đ', quantity: 92, weight: 10, color: '#1e293b' },
-        { id: 'p5', name: 'Khẩu trang KF94', quantity: 99, weight: 250, color: '#10b981' },
-        { id: 'p6', name: 'Kẹo Star (Vĩ 4v)', quantity: 99, weight: 250, color: '#f59e0b' },
-        { id: 'p7', name: 'May mắn lần sau', quantity: 9999, weight: 390, color: '#94a3b8' }
+        { id: 'p1', name: 'Phiếu quà tặng 5.000đ', quantity: 15, weight: 80, color: '#3b82f6', icon: '🎫' },
+        { id: 'p2', name: 'Nước muối Vĩnh Phúc', quantity: 14, weight: 80, color: '#0ea5e9', icon: '💧' },
+        { id: 'p3', name: 'Khẩu trang KF94 BBT', quantity: 94, weight: 220, color: '#10b981', icon: '😷' },
+        { id: 'p4', name: 'Kẹo ngậm Star (Vĩ 4v)', quantity: 92, weight: 220, color: '#f59e0b', icon: '🍬' },
+        { id: 'p5', name: 'May mắn lần sau', quantity: 9999, weight: 200, color: '#94a3b8', icon: '🍀' },
+        { id: 'p6', name: 'Phiếu quà tặng 10.000đ', quantity: 81, weight: 60, color: '#8b5cf6', icon: '🎟️' },
+        { id: 'p7', name: 'Phiếu tặng 100.000đ', quantity: 5, weight: 5, color: '#1e293b', icon: '💎' },
+        { id: 'p8', name: 'Phiếu tặng 50.000đ', quantity: 10, weight: 15, color: '#dc2626', icon: '🏆' },
+        { id: 'p9', name: 'Phiếu tặng 20.000đ', quantity: 30, weight: 40, color: '#7c3aed', icon: '🎁' },
+        { id: 'p10', name: 'Son dưỡng môi', quantity: 20, weight: 80, color: '#ec4899', icon: '💄' }
     ];
 
-    // ===== DATA LAYER (localStorage) =====
+    // ===== DATA =====
     function loadData() {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) return JSON.parse(raw);
+        if (raw) {
+            try { return JSON.parse(raw); } catch(e) {}
+        }
         return { prizes: JSON.parse(JSON.stringify(PRIZE_DATA)), users: [] };
     }
-
-    function saveData(data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
+    function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
     let appData = loadData();
     let currentUser = null;
     let isSpinning = false;
+    let currentRotation = 0;
 
-    // ===== DRAW WHEEL (Canvas) =====
+    // ===== DRAW WHEEL =====
     function drawWheel() {
         const canvas = document.getElementById('wheel-canvas');
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
         const prizes = appData.prizes;
         const count = prizes.length;
         const arc = (2 * Math.PI) / count;
-        const radius = canvas.width / 2;
+        const size = canvas.width;
+        const radius = size / 2;
+        const textRadius = radius * 0.68;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, size, size);
 
         for (let i = 0; i < count; i++) {
-            const startAngle = arc * i;
+            const startAngle = arc * i - Math.PI / 2;
             const endAngle = startAngle + arc;
 
+            // Segment
             ctx.beginPath();
             ctx.moveTo(radius, radius);
-            ctx.arc(radius, radius, radius - 2, startAngle, endAngle);
+            ctx.arc(radius, radius, radius - 4, startAngle, endAngle);
             ctx.closePath();
             ctx.fillStyle = prizes[i].color;
             ctx.fill();
 
-            // Border
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.lineWidth = 2;
+            // Segment border
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 1.5;
             ctx.stroke();
 
             // Text
             ctx.save();
             ctx.translate(radius, radius);
             ctx.rotate(startAngle + arc / 2);
-            ctx.textAlign = 'right';
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.shadowBlur = 3;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 2;
 
-            const text = prizes[i].name;
-            const maxWidth = radius - 40;
-            ctx.fillText(text, radius - 20, 5, maxWidth);
+            // Word wrap for long text
+            const words = prizes[i].name.split(' ');
+            let lines = [];
+            let line = '';
+            for (const w of words) {
+                if ((line + ' ' + w).length > 12 && line) {
+                    lines.push(line);
+                    line = w;
+                } else {
+                    line = line ? line + ' ' + w : w;
+                }
+            }
+            if (line) lines.push(line);
+
+            const lineHeight = 13;
+            const startY = textRadius - (lines.length - 1) * lineHeight / 2;
+            lines.forEach((l, li) => {
+                ctx.fillText(l, 0, startY + li * lineHeight - textRadius + radius * 0.55);
+            });
+
             ctx.restore();
         }
 
-        // Center circle
+        // Inner shadow ring
         ctx.beginPath();
-        ctx.arc(radius, radius, 30, 0, 2 * Math.PI);
-        ctx.fillStyle = '#fff';
-        ctx.fill();
-        ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = 4;
+        ctx.arc(radius, radius, radius - 4, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+        ctx.lineWidth = 3;
         ctx.stroke();
     }
 
     // ===== RENDER INVENTORY =====
     function renderInventory() {
         const container = document.getElementById('prize-inventory');
-        container.innerHTML = appData.prizes.filter(p => p.id !== 'p7').map(p => `
-            <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 rounded-full" style="background-color:${p.color}"></div>
-                    <span class="text-xs font-bold text-slate-600">${p.name}</span>
+        if (!container) return;
+        container.innerHTML = appData.prizes.map(p => `
+            <div class="prize-item flex items-center justify-between px-5 py-3 cursor-default">
+                <div class="flex items-center gap-3">
+                    <span class="text-base">${p.icon}</span>
+                    <span class="text-[13px] font-semibold text-slate-700 leading-tight">${p.name}</span>
                 </div>
-                <span class="text-[10px] bg-slate-100 px-2 py-1 rounded-md font-black ${p.quantity <= 5 ? 'text-red-500' : 'text-slate-400'}">Còn: ${p.quantity}</span>
+                <span class="text-[11px] bg-slate-100 px-2.5 py-1 rounded-lg font-bold ${p.quantity <= 5 ? 'text-red-500 bg-red-50' : 'text-slate-400'}">SL: ${p.quantity}</span>
             </div>
         `).join('');
     }
@@ -254,7 +342,6 @@
         const phone = document.getElementById('user-phone').value.trim();
         if (!name || !phone) return;
 
-        // Check existing user
         let existing = appData.users.find(u => u.phone === phone);
         if (existing) {
             currentUser = existing;
@@ -265,8 +352,9 @@
         }
 
         document.getElementById('registration-view').classList.add('hidden');
-        document.getElementById('wheel-view').classList.remove('hidden');
-        document.getElementById('wheel-view').classList.add('fade-in-up');
+        const wv = document.getElementById('wheel-view');
+        wv.classList.remove('hidden');
+        wv.classList.add('animate-fadeIn');
         updateUI();
         drawWheel();
     }
@@ -278,21 +366,21 @@
         const btn = document.getElementById('spin-button');
         btn.disabled = currentUser.turns <= 0 || isSpinning;
 
-        if (currentUser.turns <= 0) {
-            btn.classList.remove('spin-btn-glow');
+        if (currentUser.turns <= 0 && !isSpinning) {
+            btn.classList.remove('btn-spin');
             document.getElementById('user-status').textContent = 'Hết lượt';
-            document.getElementById('user-status').className = 'text-xs font-bold text-red-500';
-        } else {
-            if (!isSpinning) btn.classList.add('spin-btn-glow');
+            document.getElementById('user-status').className = 'text-[11px] font-bold text-red-500';
+        } else if (!isSpinning) {
+            btn.classList.add('btn-spin');
             document.getElementById('user-status').textContent = 'Sẵn sàng';
-            document.getElementById('user-status').className = 'text-xs font-bold text-emerald-600';
+            document.getElementById('user-status').className = 'text-[11px] font-bold text-emerald-600';
         }
 
         const sBtn = document.getElementById('share-button');
         if (currentUser.hasShared) {
             sBtn.disabled = true;
-            sBtn.innerHTML = '<span>✅ Đã nhận lượt chia sẻ</span>';
-            sBtn.className = 'w-full bg-slate-100 text-slate-400 font-bold py-4 rounded-2xl border-2 border-slate-200 cursor-not-allowed flex items-center justify-center gap-2';
+            sBtn.textContent = '✅ Đã nhận lượt';
+            sBtn.className = 'bg-slate-200 text-slate-400 font-bold py-3 px-8 rounded-xl cursor-not-allowed text-sm';
         }
     }
 
@@ -303,10 +391,12 @@
 
         const btn = document.getElementById('spin-button');
         btn.disabled = true;
-        btn.classList.remove('spin-btn-glow');
-        btn.textContent = 'ĐANG QUAY...';
+        btn.classList.remove('btn-spin');
+        btn.textContent = 'Đang quay...';
+        document.getElementById('user-status').textContent = 'Đang quay...';
+        document.getElementById('user-status').className = 'text-[11px] font-bold text-amber-500';
 
-        // Pick prize by weight
+        // Pick prize
         const prizes = appData.prizes;
         const pool = prizes.filter(p => p.quantity > 0);
         const totalW = pool.reduce((s, p) => s + p.weight, 0);
@@ -317,70 +407,77 @@
             rand -= p.weight;
         }
 
-        // Decrease quantity
-        if (selected.id !== 'p7') {
+        // Update data
+        if (selected.id !== 'p5') {
             const idx = appData.prizes.findIndex(p => p.id === selected.id);
             appData.prizes[idx].quantity--;
         }
-
-        // Decrease turns
         currentUser.turns--;
         currentUser.prizes.push({ name: selected.name, date: new Date().toISOString() });
         saveData(appData);
 
-        // Animate wheel
+        // Calculate rotation
         const count = prizes.length;
         const prizeIdx = prizes.findIndex(p => p.id === selected.id);
-        const arc = 360 / count;
-        const rotations = 5 + Math.floor(Math.random() * 3);
-        // The pointer is at top (270deg in canvas coords = top). We need to land on the prize segment.
-        const targetAngle = (rotations * 360) + (360 - (prizeIdx * arc) - (arc / 2)) + (Math.random() * (arc * 0.6) - arc * 0.3);
+        const segAngle = 360 / count;
+        const extraSpins = (5 + Math.floor(Math.random() * 3)) * 360;
+        const targetDeg = 360 - (prizeIdx * segAngle) - segAngle / 2 + (Math.random() * segAngle * 0.5 - segAngle * 0.25);
+        const finalRotation = currentRotation + extraSpins + targetDeg - (currentRotation % 360);
 
         const canvas = document.getElementById('wheel-canvas');
-        canvas.style.transform = `rotate(${targetAngle}deg)`;
+        canvas.style.transform = 'rotate(' + finalRotation + 'deg)';
+        currentRotation = finalRotation;
 
-        setTimeout(() => {
+        setTimeout(function() {
             isSpinning = false;
-            const emoji = document.getElementById('modal-emoji');
-            const title = document.getElementById('modal-title');
-            const prizeText = document.getElementById('modal-prize-text');
-
-            if (selected.id === 'p7') {
-                emoji.textContent = '🤞';
-                title.textContent = 'CHÚC MAY MẮN LẦN SAU!';
-                title.className = 'text-2xl font-black text-slate-500 mb-2';
-                prizeText.textContent = selected.name;
-                prizeText.className = 'text-xl font-black text-slate-400 mb-6';
-            } else {
-                emoji.textContent = '🎉';
-                title.textContent = 'CHÚC MỪNG!';
-                title.className = 'text-3xl font-black text-blue-900 mb-2';
-                prizeText.textContent = selected.name;
-                prizeText.className = 'text-2xl font-black text-red-600 mb-6';
-                createConfetti();
-            }
-
-            document.getElementById('result-modal').classList.remove('hidden');
-            btn.textContent = 'QUAY NGAY';
+            showResult(selected);
+            btn.textContent = 'Quay!';
             updateUI();
             renderInventory();
         }, 5300);
+    }
+
+    // ===== SHOW RESULT =====
+    function showResult(prize) {
+        const emoji = document.getElementById('modal-emoji');
+        const title = document.getElementById('modal-title');
+        const text = document.getElementById('modal-prize-text');
+
+        if (prize.id === 'p5') {
+            emoji.textContent = '🤞';
+            title.textContent = 'HẾT LƯỢT!';
+            title.className = 'text-2xl font-black text-slate-400 mb-1';
+            text.textContent = prize.name;
+            text.className = 'text-lg font-bold text-slate-500';
+            text.parentElement.className = 'bg-slate-50 border border-slate-200 rounded-xl py-3 px-6 mb-4 inline-block';
+        } else {
+            emoji.textContent = '🎉';
+            title.textContent = 'CHÚC MỪNG!';
+            title.className = 'text-2xl font-black text-blue-900 mb-1';
+            text.textContent = prize.name;
+            text.className = 'text-xl font-black text-red-600';
+            text.parentElement.className = 'bg-red-50 border border-red-100 rounded-xl py-3 px-6 mb-4 inline-block';
+            createConfetti();
+        }
+
+        document.getElementById('result-modal').classList.remove('hidden');
     }
 
     // ===== CONFETTI =====
     function createConfetti() {
         const container = document.getElementById('confetti-container');
         container.innerHTML = '';
-        const colors = ['#3b82f6','#ef4444','#f59e0b','#10b981','#8b5cf6','#ec4899','#facc15'];
-        for (let i = 0; i < 60; i++) {
+        const colors = ['#3b82f6','#ef4444','#f59e0b','#10b981','#8b5cf6','#ec4899','#fbbf24','#06b6d4'];
+        for (let i = 0; i < 80; i++) {
             const c = document.createElement('div');
-            c.className = 'confetti';
+            c.className = 'confetti-piece';
             c.style.left = Math.random() * 100 + '%';
             c.style.top = '-10px';
             c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            c.style.animationDelay = (Math.random() * 0.8) + 's';
-            c.style.width = (Math.random() * 8 + 5) + 'px';
-            c.style.height = (Math.random() * 8 + 5) + 'px';
+            c.style.animationDelay = (Math.random() * 1) + 's';
+            c.style.animationDuration = (2.5 + Math.random() * 1.5) + 's';
+            c.style.width = (Math.random() * 8 + 4) + 'px';
+            c.style.height = (Math.random() * 8 + 4) + 'px';
             container.appendChild(c);
         }
     }
@@ -389,22 +486,24 @@
     function renderCustomerList(list) {
         const tbody = document.getElementById('admin-customer-list');
         if (list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">Chưa có khách hàng nào</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 text-sm">Chưa có khách hàng nào tham gia</td></tr>';
         } else {
-            tbody.innerHTML = list.map((c, i) => `
-                <tr class="border-b border-slate-50 hover:bg-slate-50">
-                    <td class="p-3 text-slate-400">${i + 1}</td>
-                    <td class="p-3 font-semibold">${c.name}</td>
-                    <td class="p-3 text-blue-600">${c.phone}</td>
-                    <td class="p-3"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg font-bold text-xs">${c.turns}</span></td>
-                    <td class="p-3">${c.hasShared ? '<span class="text-emerald-600 font-bold">✓</span>' : '<span class="text-slate-300">—</span>'}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = list.map(function(c, i) {
+                const prizesWon = (c.prizes || []).map(function(p) { return p.name; }).join(', ') || '—';
+                return '<tr class="border-t border-slate-50 hover:bg-blue-50/30">' +
+                    '<td class="p-3 text-slate-400 text-xs">' + (i + 1) + '</td>' +
+                    '<td class="p-3 font-semibold text-slate-700">' + c.name + '</td>' +
+                    '<td class="p-3 text-blue-600 font-mono text-xs">' + c.phone + '</td>' +
+                    '<td class="p-3"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold text-xs">' + c.turns + '</span></td>' +
+                    '<td class="p-3">' + (c.hasShared ? '<span class="text-emerald-600 font-bold text-xs">✓ Rồi</span>' : '<span class="text-slate-300 text-xs">Chưa</span>') + '</td>' +
+                    '<td class="p-3 text-xs text-slate-500 max-w-[200px] truncate">' + prizesWon + '</td>' +
+                '</tr>';
+            }).join('');
         }
-        document.getElementById('admin-total').textContent = 'Tổng: ' + list.length + ' khách hàng';
+        document.getElementById('admin-total').textContent = 'Tổng cộng: ' + list.length + ' khách hàng';
     }
 
-    // ===== EVENT LISTENERS =====
+    // ===== EVENTS =====
     document.getElementById('register-form').onsubmit = register;
     document.getElementById('spin-button').onclick = spin;
 
@@ -414,16 +513,18 @@
         currentUser.hasShared = true;
         saveData(appData);
         updateUI();
-        alert('Bạn nhận thêm 01 lượt quay!');
+        alert('🎉 Bạn nhận thêm 01 lượt quay!');
     };
 
     document.getElementById('close-modal').onclick = function() {
         document.getElementById('result-modal').classList.add('hidden');
-        const canvas = document.getElementById('wheel-canvas');
+        // Reset wheel transition for next spin
+        var canvas = document.getElementById('wheel-canvas');
         canvas.style.transition = 'none';
-        canvas.style.transform = 'rotate(0deg)';
+        canvas.style.transform = 'rotate(' + (currentRotation % 360) + 'deg)';
+        currentRotation = currentRotation % 360;
         setTimeout(function() {
-            canvas.style.transition = 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+            canvas.style.transition = 'transform 5s cubic-bezier(0.15, 0.6, 0.15, 1)';
         }, 50);
     };
 
@@ -465,9 +566,9 @@
     };
 
     document.getElementById('admin-search').oninput = function(e) {
-        const q = e.target.value.toLowerCase();
-        const filtered = appData.users.filter(function(c) {
-            return c.name.toLowerCase().includes(q) || c.phone.includes(q);
+        var q = e.target.value.toLowerCase();
+        var filtered = appData.users.filter(function(c) {
+            return c.name.toLowerCase().indexOf(q) !== -1 || c.phone.indexOf(q) !== -1;
         });
         renderCustomerList(filtered);
     };
@@ -477,5 +578,3 @@
     drawWheel();
 })();
 </script>
-</body>
-</html>
