@@ -7,126 +7,199 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Be Vietnam Pro', sans-serif; overflow-x: hidden; }
         .wheel-container { position: relative; width: 320px; height: 320px; border-radius: 50%; border: 8px solid #FFD700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); }
         @media (min-width: 640px) { .wheel-container { width: 400px; height: 400px; } }
         .wheel { width: 100%; height: 100%; position: relative; border-radius: 50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); }
-        .segment { position: absolute; width: 50%; height: 50%; top: 0; left: 50%; transform-origin: 0 100%; display: flex; justify-content: center; align-items: flex-start; padding-top: 20px; }
-        .segment-label { transform: rotate(18deg); font-size: 10px; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); text-align: center; max-width: 70px; line-height: 1.2; }
+        .segment { position: absolute; width: 50%; height: 50%; top: 0; left: 50%; transform-origin: 0% 100%; }
+        .segment-label { transform: rotate(18deg); font-size: 10px; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); text-align: center; max-width: 70px; line-height: 1.2; padding-top: 20px; }
         .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 40px solid #ef4444; z-index: 30; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
         .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(8px); }
+        .confetti { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confetti-fall 3s ease-out forwards; }
+        @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(400px) rotate(720deg); opacity: 0; } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); } 50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.8); } }
+        .spin-btn-glow { animation: pulse-glow 2s infinite; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800 min-h-screen">
 
-    <div id="app" class="container mx-auto p-4 max-w-5xl relative min-h-screen">
-        <!-- Loader ban đầu -->
-        <div id="app-loader" class="flex flex-col items-center justify-center py-40">
-            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-4"></div>
-            <p class="text-slate-500 animate-pulse">Đang kết nối hệ thống quà tặng...</p>
+<div id="app" class="container mx-auto p-4 max-w-5xl relative min-h-screen">
+
+    <!-- Loader -->
+    <div id="app-loader" class="flex flex-col items-center justify-center py-40">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-4"></div>
+        <p class="text-slate-500 animate-pulse">Đang tải hệ thống quà tặng...</p>
+    </div>
+
+    <div id="app-content" class="hidden">
+
+        <!-- Header -->
+        <div class="text-center mb-8 mt-4 bg-white py-8 px-4 rounded-3xl shadow-sm border border-slate-100 relative">
+            <button id="admin-toggle-btn" class="absolute top-4 right-4 text-slate-300 hover:text-slate-600 transition-colors text-xs p-2 rounded-lg hover:bg-slate-100" title="Quản trị">
+                ⚙️
+            </button>
+            <h2 class="text-3xl font-black text-blue-900 mb-1">NHÀ THUỐC BẢO NGỌC</h2>
+            <p class="text-red-600 font-bold tracking-widest text-sm uppercase mb-4">OffiSanté Bảo Ngọc VN</p>
+            <div class="h-1.5 w-20 bg-yellow-400 mx-auto rounded-full"></div>
         </div>
 
-        <div id="app-content" class="hidden">
-            <!-- Header Thương Hiệu -->
-            <div class="text-center mb-10 mt-4 bg-white py-8 px-4 rounded-3xl shadow-sm border border-slate-100">
-                <h2 class="text-3xl font-black text-blue-900 mb-1">NHÀ THUỐC BẢO NGỌC</h2>
-                <p class="text-red-600 font-bold tracking-widest text-sm uppercase mb-4">OffiSanté Bảo Ngọc VN</p>
-                <div class="h-1.5 w-20 bg-yellow-400 mx-auto rounded-full"></div>
-            </div>
-
-            <!-- Form Đăng Ký (Hiện trước) -->
-            <div id="registration-view" class="max-w-md mx-auto">
-                <div class="bg-white p-8 rounded-3xl shadow-xl border border-blue-50">
-                    <h3 class="text-xl font-bold text-center mb-6 text-slate-800">Nhập thông tin nhận lượt quay</h3>
-                    <form id="register-form" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-600 mb-1">Họ và Tên</label>
-                            <input type="text" id="user-name" placeholder="Nguyễn Văn A" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-600 mb-1">Số Điện Thoại</label>
-                            <input type="tel" id="user-phone" placeholder="09xx xxx xxx" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" required>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-700 text-white font-bold py-4 rounded-2xl hover:bg-blue-800 shadow-lg shadow-blue-200 transition-all active:scale-95">XÁC NHẬN</button>
-                    </form>
-                    <p class="text-[10px] text-slate-400 text-center mt-6 uppercase tracking-tighter">* Mỗi khách hàng chỉ nhận 01 lượt quay mặc định</p>
-                </div>
-            </div>
-
-            <!-- Khu Vực Quay Số (Ẩn lúc đầu) -->
-            <div id="wheel-view" class="hidden animate-in fade-in duration-700">
-                <div class="flex flex-col items-center gap-12">
-                    <div class="relative scale-90 sm:scale-100">
-                        <div class="pointer"></div>
-                        <div class="wheel-container">
-                            <div id="wheel-element" class="wheel"></div>
-                        </div>
-                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div class="w-16 h-16 bg-white rounded-full shadow-xl border-4 border-yellow-400 z-40 flex items-center justify-center font-black text-blue-900 text-xs">BN</div>
-                        </div>
+        <!-- Registration View -->
+        <div id="registration-view" class="max-w-md mx-auto">
+            <div class="bg-white p-8 rounded-3xl shadow-xl border border-blue-50">
+                <h3 class="text-xl font-bold text-center mb-6 text-slate-800">Nhập thông tin nhận lượt quay</h3>
+                <form id="register-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">Họ và Tên</label>
+                        <input type="text" id="user-name" placeholder="Nguyễn Văn A" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
-
-                    <div class="flex flex-col items-center gap-6 w-full max-w-sm">
-                        <button id="spin-button" class="w-full bg-red-600 text-white font-black py-5 px-10 rounded-2xl text-2xl shadow-xl hover:bg-red-700 transition transform hover:scale-105 active:scale-95 disabled:bg-slate-300 disabled:scale-100">QUAY NGAY</button>
-                        
-                        <div class="flex items-center gap-4 w-full">
-                            <div class="flex-1 bg-white p-4 rounded-2xl border border-slate-200 text-center">
-                                <p class="text-xs text-slate-500 font-bold uppercase mb-1">Lượt còn lại</p>
-                                <span id="turns-display" class="text-3xl font-black text-blue-700">0</span>
-                            </div>
-                            <div class="flex-1 bg-white p-4 rounded-2xl border border-slate-200 text-center">
-                                <p class="text-xs text-slate-500 font-bold uppercase mb-1">Trạng thái</p>
-                                <span id="user-status" class="text-xs font-bold text-emerald-600">Sẵn sàng</span>
-                            </div>
-                        </div>
-
-                        <button id="share-button" class="w-full bg-emerald-100 text-emerald-700 font-bold py-4 rounded-2xl border-2 border-emerald-200 hover:bg-emerald-200 transition-all flex items-center justify-center gap-2">
-                            <span>📢 Chia sẻ để nhận thêm 1 lượt</span>
-                        </button>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">Số Điện Thoại</label>
+                        <input type="tel" id="user-phone" placeholder="09xx xxx xxx" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
-                </div>
-
-                <!-- Kho Quà Công Khai -->
-                <div class="mt-16 max-w-lg mx-auto">
-                    <h3 class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs mb-6">Danh sách quà tặng trong kho</h3>
-                    <div id="prize-inventory" class="grid grid-cols-1 gap-2"></div>
-                </div>
+                    <button type="submit" class="w-full bg-blue-700 text-white font-bold py-4 rounded-2xl hover:bg-blue-800 shadow-lg shadow-blue-200 transition-all active:scale-95">XÁC NHẬN</button>
+                </form>
+                <p class="text-[10px] text-slate-400 text-center mt-6 uppercase tracking-wider">* Mỗi khách hàng chỉ nhận 01 lượt quay mặc định</p>
             </div>
         </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        <!-- Wheel View -->
+        <div id="wheel-view" class="hidden">
+            <div class="flex flex-col items-center gap-12">
+                <div class="relative scale-90 sm:scale-100">
+                    <div class="pointer"></div>
+                    <div class="wheel-container">
+                        <div id="wheel-element" class="wheel"></div>
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="w-16 h-16 bg-white rounded-full shadow-xl border-4 border-yellow-400 z-40 flex items-center justify-center font-black text-blue-900 text-xs">BN</div>
+                    </div>
+                </div>
 
-        // Cấu hình Firebase công cộng
-        const firebaseConfig = {
-            apiKey: "AIzaSyAwuifQ6wA3OAfnIjebObv0Nmw9LsDs2-g",
-            authDomain: "vong-quay-may-man-5eceb.firebaseapp.com",
-            projectId: "vong-quay-may-man-5eceb",
-            storageBucket: "vong-quay-may-man-5eceb.firebasestorage.app",
-            messagingSenderId: "950395409406",
-            appId: "1:950395409406:web:d25b05fc1ea13d64f126af"
-        };
+                <div class="flex flex-col items-center gap-6 w-full max-w-sm">
+                    <button id="spin-button" class="w-full bg-red-600 text-white font-black py-5 px-10 rounded-2xl text-2xl shadow-xl hover:bg-red-700 transition transform hover:scale-105 active:scale-95 disabled:bg-slate-300 disabled:scale-100 disabled:shadow-none spin-btn-glow">QUAY NGAY</button>
+                    
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="flex-1 bg-white p-4 rounded-2xl border border-slate-200 text-center">
+                            <p class="text-xs text-slate-500 font-bold uppercase mb-1">Lượt còn lại</p>
+                            <span id="turns-display" class="text-3xl font-black text-blue-700">0</span>
+                        </div>
+                        <div class="flex-1 bg-white p-4 rounded-2xl border border-slate-200 text-center">
+                            <p class="text-xs text-slate-500 font-bold uppercase mb-1">Trạng thái</p>
+                            <span id="user-status" class="text-xs font-bold text-emerald-600">Sẵn sàng</span>
+                        </div>
+                    </div>
 
-        const APP_ID = 'baongoc-lucky-2026-final-v1';
-        let db, auth, currentUser = null;
-        let prizes = [];
+                    <button id="share-button" class="w-full bg-emerald-100 text-emerald-700 font-bold py-4 rounded-2xl border-2 border-emerald-200 hover:bg-emerald-200 transition-all flex items-center justify-center gap-2">
+                        <span>📢 Chia sẻ để nhận thêm 1 lượt</span>
+                    </button>
+                </div>
+            </div>
 
-        // CẤU HÌNH QUÀ TẶNG & TỶ LỆ (Weights)
-        const PRIZE_DATA = [
-            { id: 'p1', name: '10.000đ', quantity: 83, weight: 45, color: '#3b82f6' }, // ~4.5%
-            { id: 'p2', name: '20.000đ', quantity: 79, weight: 45, color: '#8b5cf6' }, // ~4.5%
-            { id: 'p3', name: '50.000đ', quantity: 94, weight: 10, color: '#f43f5e' }, // 1%
-            { id: 'p4', name: '100.000đ', quantity: 92, weight: 10, color: '#1e293b' }, // 1%
-            { id: 'p5', name: 'Khẩu trang KF94 BBT', quantity: 99, weight: 250, color: '#10b981' },
-            { id: 'p6', name: 'Kẹo ngậm Star (Vĩ 4v)', quantity: 99, weight: 250, color: '#f59e0b' },
-            { id: 'p7', name: 'May mắn lần sau', quantity: 99, weight: 390, color: '#94a3b8' }
-        ];
+            <!-- Prize Inventory -->
+            <div class="mt-16 max-w-lg mx-auto">
+                <h3 class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs mb-6">Danh sách quà tặng trong kho</h3>
+                <div id="prize-inventory" class="grid grid-cols-1 gap-2"></div>
+            </div>
+        </div>
 
-        async function init() {
+        <!-- Admin View -->
+        <div id="admin-view" class="hidden max-w-4xl mx-auto">
+            <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-slate-800">📋 Danh Sách Khách Hàng</h3>
+                    <button id="admin-back-btn" class="bg-slate-100 text-slate-600 font-bold py-2 px-4 rounded-xl hover:bg-slate-200 transition-all text-sm">← Quay lại</button>
+                </div>
+                <div class="mb-4 flex gap-2">
+                    <input type="text" id="admin-search" placeholder="Tìm theo tên hoặc SĐT..." class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <button id="admin-refresh-btn" class="bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition text-sm font-bold">🔄 Tải lại</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-left">
+                                <th class="p-3 rounded-l-xl font-bold text-slate-500">#</th>
+                                <th class="p-3 font-bold text-slate-500">Họ Tên</th>
+                                <th class="p-3 font-bold text-slate-500">SĐT</th>
+                                <th class="p-3 font-bold text-slate-500">Lượt còn</th>
+                                <th class="p-3 rounded-r-xl font-bold text-slate-500">Đã chia sẻ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-customer-list"></tbody>
+                    </table>
+                </div>
+                <p id="admin-total" class="text-xs text-slate-400 mt-4 text-right"></p>
+            </div>
+        </div>
+
+    </div><!-- end app-content -->
+</div><!-- end app -->
+
+<!-- Result Modal -->
+<div id="result-modal" class="modal-backdrop hidden">
+    <div class="bg-white rounded-3xl p-10 text-center max-w-sm mx-4 shadow-2xl relative overflow-hidden">
+        <div id="confetti-container" class="absolute inset-0 pointer-events-none"></div>
+        <div class="relative z-10">
+            <p id="modal-emoji" class="text-6xl mb-4">🎊</p>
+            <h2 id="modal-title" class="text-3xl font-black text-blue-900 mb-2">CHÚC MỪNG!</h2>
+            <p class="text-slate-500 mb-2">Bạn nhận được</p>
+            <p id="modal-prize-text" class="text-2xl font-black text-red-600 mb-6"></p>
+            <button id="close-modal" class="w-full bg-blue-700 text-white font-bold py-4 rounded-2xl hover:bg-blue-800 transition-all">ĐÓNG</button>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Login Modal -->
+<div id="admin-login-modal" class="modal-backdrop hidden">
+    <div class="bg-white rounded-3xl p-8 text-center max-w-sm mx-4 shadow-2xl">
+        <h3 class="text-xl font-bold text-slate-800 mb-2">🔐 Đăng Nhập Quản Trị</h3>
+        <p class="text-sm text-slate-500 mb-6">Nhập mật khẩu để truy cập trang quản trị</p>
+        <input type="password" id="admin-password" placeholder="Nhập mật khẩu..." class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none mb-4 text-center text-lg tracking-widest">
+        <p id="admin-login-error" class="text-red-500 text-xs mb-4 hidden">Mật khẩu không đúng!</p>
+        <div class="flex gap-3">
+            <button id="admin-login-cancel" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-2xl hover:bg-slate-200 transition-all">Hủy</button>
+            <button id="admin-login-submit" class="flex-1 bg-blue-700 text-white font-bold py-3 rounded-2xl hover:bg-blue-800 transition-all">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, getDocs, collection, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAwuifQ6wA3OAfnIjebObv0Nmw9LsDs2-g",
+        authDomain: "vong-quay-may-man-5eceb.firebaseapp.com",
+        projectId: "vong-quay-may-man-5eceb",
+        storageBucket: "vong-quay-may-man-5eceb.firebasestorage.app",
+        messagingSenderId: "950395409406",
+        appId: "1:950395409406:web:d25b05fc1ea13d64f126af"
+    };
+
+    const APP_ID = 'baongoc-lucky-2026-final-v1';
+    const ADMIN_PASSWORD = 'baongoc2026';
+
+    let db, auth, currentUser = null;
+    let prizes = [];
+    let allCustomers = [];
+
+    const PRIZE_DATA = [
+        { id: 'p1', name: '10.000đ', quantity: 83, weight: 45, color: '#3b82f6' },
+        { id: 'p2', name: '20.000đ', quantity: 79, weight: 45, color: '#8b5cf6' },
+        { id: 'p3', name: '50.000đ', quantity: 94, weight: 10, color: '#f43f5e' },
+        { id: 'p4', name: '100.000đ', quantity: 92, weight: 10, color: '#1e293b' },
+        { id: 'p5', name: 'Khẩu trang KF94 BBT', quantity: 99, weight: 250, color: '#10b981' },
+        { id: 'p6', name: 'Kẹo ngậm Star (Vĩ 4v)', quantity: 99, weight: 250, color: '#f59e0b' },
+        { id: 'p7', name: 'May mắn lần sau', quantity: 999, weight: 390, color: '#94a3b8' }
+    ];
+
+    // ===== INIT =====
+    async function init() {
+        try {
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
@@ -134,7 +207,7 @@
 
             const invRef = doc(db, `artifacts/${APP_ID}/public/data/prizes`, 'main_inventory');
             const snap = await getDoc(invRef);
-            
+
             if (!snap.exists()) {
                 const initial = {};
                 PRIZE_DATA.forEach(p => initial[p.id] = p);
@@ -143,7 +216,7 @@
 
             onSnapshot(invRef, (d) => {
                 if (d.exists()) {
-                    prizes = Object.values(d.data().all).sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true}));
+                    prizes = Object.values(d.data().all).sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
                     renderWheel();
                     renderInventory();
                 }
@@ -151,144 +224,289 @@
 
             document.getElementById('app-loader').classList.add('hidden');
             document.getElementById('app-content').classList.remove('hidden');
+        } catch (err) {
+            console.error('Init error:', err);
+            document.getElementById('app-loader').innerHTML = '<p class="text-red-500 font-bold">Lỗi kết nối. Vui lòng tải lại trang.</p>';
         }
+    }
 
-        function renderWheel() {
-            const wheel = document.getElementById('wheel-element');
-            wheel.innerHTML = '';
-            const angle = 360 / prizes.length;
-            prizes.forEach((p, i) => {
-                const seg = document.createElement('div');
-                seg.className = 'segment';
-                seg.style.transform = `rotate(${angle * i}deg)`;
-                seg.style.backgroundColor = p.color;
-                const clip = 360 / prizes.length;
-                seg.style.clipPath = `polygon(0 0, 100% 0, 100% ${clip}%, 0 100%)`;
-                seg.innerHTML = `<div class="segment-label">${p.name}</div>`;
-                wheel.appendChild(seg);
-            });
-        }
+    // ===== RENDER WHEEL =====
+    function renderWheel() {
+        const wheel = document.getElementById('wheel-element');
+        wheel.innerHTML = '';
+        const count = prizes.length;
+        const angle = 360 / count;
 
-        function renderInventory() {
-            const container = document.getElementById('prize-inventory');
-            container.innerHTML = prizes.map(p => `
-                <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+        prizes.forEach((p, i) => {
+            const seg = document.createElement('div');
+            seg.className = 'segment';
+            seg.style.transform = `rotate(${angle * i - 90}deg)`;
+            seg.style.backgroundColor = p.color;
+            seg.style.clipPath = `polygon(0% 100%, 100% ${100 - Math.tan((angle / 2) * Math.PI / 180) * 100}%, 100% ${100 + Math.tan((angle / 2) * Math.PI / 180) * 100}%)`;
+            seg.innerHTML = `<div class="segment-label">${p.name}</div>`;
+            wheel.appendChild(seg);
+        });
+    }
+
+    // ===== RENDER INVENTORY =====
+    function renderInventory() {
+        const container = document.getElementById('prize-inventory');
+        container.innerHTML = prizes.map(p => `
+            <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full" style="background-color: ${p.color}"></div>
                     <span class="text-xs font-bold text-slate-600">${p.name}</span>
-                    <span class="text-[10px] bg-slate-100 px-2 py-1 rounded-md font-black text-slate-400">Còn: ${p.quantity}</span>
                 </div>
+                <span class="text-[10px] bg-slate-100 px-2 py-1 rounded-md font-black ${p.quantity <= 5 ? 'text-red-500' : 'text-slate-400'}">Còn: ${p.quantity}</span>
+            </div>
+        `).join('');
+    }
+
+    // ===== REGISTRATION =====
+    async function register(e) {
+        e.preventDefault();
+        const name = document.getElementById('user-name').value.trim();
+        const phone = document.getElementById('user-phone').value.trim();
+
+        if (!name || !phone) return;
+
+        const userRef = doc(db, `artifacts/${APP_ID}/public/data/users`, phone);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+            currentUser = userSnap.data();
+        } else {
+            currentUser = { name, phone, turns: 1, hasShared: false, createdAt: new Date().toISOString() };
+            await setDoc(userRef, currentUser);
+        }
+
+        document.getElementById('registration-view').classList.add('hidden');
+        document.getElementById('wheel-view').classList.remove('hidden');
+        updateUI();
+    }
+
+    // ===== UPDATE UI =====
+    function updateUI() {
+        document.getElementById('turns-display').textContent = currentUser.turns;
+        const btn = document.getElementById('spin-button');
+        btn.disabled = currentUser.turns <= 0;
+        if (currentUser.turns <= 0) {
+            btn.classList.remove('spin-btn-glow');
+            document.getElementById('user-status').textContent = 'Hết lượt';
+            document.getElementById('user-status').className = 'text-xs font-bold text-red-500';
+        } else {
+            btn.classList.add('spin-btn-glow');
+            document.getElementById('user-status').textContent = 'Sẵn sàng';
+            document.getElementById('user-status').className = 'text-xs font-bold text-emerald-600';
+        }
+
+        const sBtn = document.getElementById('share-button');
+        if (currentUser.hasShared) {
+            sBtn.disabled = true;
+            sBtn.innerHTML = '<span>✅ Đã cộng lượt chia sẻ</span>';
+            sBtn.className = 'w-full bg-slate-100 text-slate-400 font-bold py-4 rounded-2xl border-2 border-slate-200 cursor-not-allowed flex items-center justify-center gap-2';
+        }
+    }
+
+    // ===== SPIN =====
+    async function spin() {
+        if (!currentUser || currentUser.turns <= 0) return;
+        const btn = document.getElementById('spin-button');
+        btn.disabled = true;
+        btn.classList.remove('spin-btn-glow');
+        btn.textContent = 'ĐANG QUAY...';
+
+        const winPrize = await runTransaction(db, async (tx) => {
+            const invRef = doc(db, `artifacts/${APP_ID}/public/data/prizes`, 'main_inventory');
+            const d = await tx.get(invRef);
+            const all = d.data().all;
+
+            const pool = Object.values(all).filter(p => p.quantity > 0);
+            const totalW = pool.reduce((s, p) => s + p.weight, 0);
+            let rand = Math.random() * totalW;
+
+            let selected = pool[pool.length - 1];
+            for (const p of pool) {
+                if (rand < p.weight) { selected = p; break; }
+                rand -= p.weight;
+            }
+
+            if (selected.id !== 'p7') {
+                all[selected.id].quantity--;
+                tx.update(invRef, { all });
+            }
+            return selected;
+        });
+
+        const idx = prizes.findIndex(p => p.id === winPrize.id);
+        const segA = 360 / prizes.length;
+        const rotations = 8 * 360;
+        const targetAngle = 360 - (idx * segA) - (segA / 2);
+        const finalA = rotations + targetAngle;
+
+        const wheel = document.getElementById('wheel-element');
+        wheel.style.transform = `rotate(${finalA}deg)`;
+
+        setTimeout(async () => {
+            currentUser.turns--;
+            const userRef = doc(db, `artifacts/${APP_ID}/public/data/users`, currentUser.phone);
+            await setDoc(userRef, { turns: currentUser.turns }, { merge: true });
+
+            const emoji = document.getElementById('modal-emoji');
+            const title = document.getElementById('modal-title');
+            const prizeText = document.getElementById('modal-prize-text');
+
+            if (winPrize.id === 'p7') {
+                emoji.textContent = '🤞';
+                title.textContent = 'CHÚC BẠN MAY MẮN LẦN SAU!';
+                title.className = 'text-2xl font-black text-slate-500 mb-2';
+                prizeText.textContent = winPrize.name;
+                prizeText.className = 'text-xl font-black text-slate-400 mb-6';
+            } else {
+                emoji.textContent = '🎊';
+                title.textContent = 'CHÚC MỪNG!';
+                title.className = 'text-3xl font-black text-blue-900 mb-2';
+                prizeText.textContent = winPrize.name;
+                prizeText.className = 'text-2xl font-black text-red-600 mb-6';
+                createConfetti();
+            }
+
+            document.getElementById('result-modal').classList.remove('hidden');
+            btn.textContent = 'QUAY NGAY';
+            updateUI();
+        }, 5500);
+    }
+
+    // ===== CONFETTI =====
+    function createConfetti() {
+        const container = document.getElementById('confetti-container');
+        container.innerHTML = '';
+        const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899'];
+        for (let i = 0; i < 50; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + '%';
+            c.style.top = -10 + 'px';
+            c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            c.style.animationDelay = Math.random() * 0.5 + 's';
+            c.style.width = (Math.random() * 8 + 5) + 'px';
+            c.style.height = (Math.random() * 8 + 5) + 'px';
+            container.appendChild(c);
+        }
+    }
+
+    // ===== ADMIN: Load Customers =====
+    async function loadCustomers() {
+        const usersCol = collection(db, `artifacts/${APP_ID}/public/data/users`);
+        const snapshot = await getDocs(usersCol);
+        allCustomers = [];
+        snapshot.forEach(d => {
+            allCustomers.push({ id: d.id, ...d.data() });
+        });
+        renderCustomerList(allCustomers);
+    }
+
+    function renderCustomerList(list) {
+        const tbody = document.getElementById('admin-customer-list');
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">Chưa có khách hàng nào</td></tr>';
+        } else {
+            tbody.innerHTML = list.map((c, i) => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50">
+                    <td class="p-3 text-slate-400">${i + 1}</td>
+                    <td class="p-3 font-semibold">${c.name || '—'}</td>
+                    <td class="p-3 text-blue-600">${c.phone || c.id}</td>
+                    <td class="p-3"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg font-bold text-xs">${c.turns ?? 0}</span></td>
+                    <td class="p-3">${c.hasShared ? '<span class="text-emerald-600 font-bold">✓</span>' : '<span class="text-slate-300">—</span>'}</td>
+                </tr>
             `).join('');
         }
+        document.getElementById('admin-total').textContent = `Tổng: ${list.length} khách hàng`;
+    }
 
-        async function register(e) {
-            e.preventDefault();
-            const name = document.getElementById('user-name').value;
-            const phone = document.getElementById('user-phone').value;
-            
-            const userRef = doc(db, `artifacts/${APP_ID}/public/data/users`, phone);
-            const userSnap = await getDoc(userRef);
+    // ===== EVENT LISTENERS =====
+    document.getElementById('register-form').onsubmit = register;
+    document.getElementById('spin-button').onclick = spin;
 
-            if (userSnap.exists()) {
-                currentUser = userSnap.data();
-            } else {
-                currentUser = { name, phone, turns: 1, hasShared: false };
-                await setDoc(userRef, currentUser);
-            }
+    // Share button
+    document.getElementById('share-button').onclick = async () => {
+        if (!currentUser || currentUser.hasShared) return;
+        currentUser.turns++;
+        currentUser.hasShared = true;
+        const userRef = doc(db, `artifacts/${APP_ID}/public/data/users`, currentUser.phone);
+        await setDoc(userRef, { turns: currentUser.turns, hasShared: true }, { merge: true });
+        updateUI();
+        alert('Bạn nhận được thêm 01 lượt quay may mắn!');
+    };
 
+    // Close result modal
+    document.getElementById('close-modal').onclick = () => {
+        document.getElementById('result-modal').classList.add('hidden');
+        const wheel = document.getElementById('wheel-element');
+        wheel.style.transition = 'none';
+        wheel.style.transform = 'rotate(0deg)';
+        setTimeout(() => {
+            wheel.style.transition = 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)';
+        }, 50);
+    };
+
+    // Admin toggle button
+    document.getElementById('admin-toggle-btn').onclick = () => {
+        document.getElementById('admin-login-modal').classList.remove('hidden');
+        document.getElementById('admin-password').value = '';
+        document.getElementById('admin-login-error').classList.add('hidden');
+        document.getElementById('admin-password').focus();
+    };
+
+    // Admin login
+    document.getElementById('admin-login-submit').onclick = () => {
+        const pw = document.getElementById('admin-password').value;
+        if (pw === ADMIN_PASSWORD) {
+            document.getElementById('admin-login-modal').classList.add('hidden');
             document.getElementById('registration-view').classList.add('hidden');
+            document.getElementById('wheel-view').classList.add('hidden');
+            document.getElementById('admin-view').classList.remove('hidden');
+            loadCustomers();
+        } else {
+            document.getElementById('admin-login-error').classList.remove('hidden');
+        }
+    };
+
+    document.getElementById('admin-password').onkeydown = (e) => {
+        if (e.key === 'Enter') document.getElementById('admin-login-submit').click();
+    };
+
+    // Admin cancel
+    document.getElementById('admin-login-cancel').onclick = () => {
+        document.getElementById('admin-login-modal').classList.add('hidden');
+    };
+
+    // Admin back
+    document.getElementById('admin-back-btn').onclick = () => {
+        document.getElementById('admin-view').classList.add('hidden');
+        if (currentUser) {
             document.getElementById('wheel-view').classList.remove('hidden');
-            updateUI();
+        } else {
+            document.getElementById('registration-view').classList.remove('hidden');
         }
+    };
 
-        function updateUI() {
-            document.getElementById('turns-display').textContent = currentUser.turns;
-            document.getElementById('spin-button').disabled = currentUser.turns <= 0;
-            const sBtn = document.getElementById('share-button');
-            if (currentUser.hasShared) {
-                sBtn.disabled = true;
-                sBtn.innerHTML = '✅ Đã cộng lượt chia sẻ';
-                sBtn.className = 'w-full bg-slate-100 text-slate-400 font-bold py-4 rounded-2xl border-2 border-slate-200 cursor-not-allowed';
-            }
-        }
+    // Admin refresh
+    document.getElementById('admin-refresh-btn').onclick = loadCustomers;
 
-        async function spin() {
-            if (currentUser.turns <= 0) return;
-            const btn = document.getElementById('spin-button');
-            btn.disabled = true;
+    // Admin search
+    document.getElementById('admin-search').oninput = (e) => {
+        const q = e.target.value.toLowerCase();
+        const filtered = allCustomers.filter(c =>
+            (c.name && c.name.toLowerCase().includes(q)) ||
+            (c.phone && c.phone.includes(q)) ||
+            (c.id && c.id.includes(q))
+        );
+        renderCustomerList(filtered);
+    };
 
-            const winPrize = await runTransaction(db, async (tx) => {
-                const invRef = doc(db, `artifacts/${APP_ID}/public/data/prizes`, 'main_inventory');
-                const d = await tx.get(invRef);
-                const all = d.data().all;
-                
-                const pool = Object.values(all).filter(p => p.quantity > 0);
-                const totalW = pool.reduce((s, p) => s + p.weight, 0);
-                let rand = Math.random() * totalW;
-                
-                let selected = pool[0];
-                for (const p of pool) {
-                    if (rand < p.weight) { selected = p; break; }
-                    rand -= p.weight;
-                }
-
-                if (selected.id !== 'p7') {
-                    all[selected.id].quantity--;
-                    tx.update(invRef, { all });
-                }
-                return selected;
-            });
-
-            const idx = prizes.findIndex(p => p.id === winPrize.id);
-            const segA = 360 / prizes.length;
-            const rotations = 8 * 360;
-            const finalA = rotations + (360 - (idx * segA)) - (segA / 2);
-            
-            const wheel = document.getElementById('wheel-element');
-            wheel.style.transform = `rotate(${finalA}deg)`;
-
-            setTimeout(async () => {
-                currentUser.turns--;
-                const userRef = doc(db, `artifacts/${APP_ID}/public/data/users`, currentUser.phone);
-                await setDoc(userRef, { turns: currentUser.turns }, { merge: true });
-
-                const emoji = document.getElementById('modal-emoji');
-                const title = document.getElementById('modal-title');
-                if(winPrize.id === 'p7') {
-                    emoji.textContent = '🤞';
-                    title.textContent = 'HẾT LƯỢT!';
-                    title.className = 'text-3xl font-black text-slate-400 mb-2';
-                } else {
-                    emoji.textContent = '🎊';
-                    title.textContent = 'CHÚC MỪNG!';
-                    title.className = 'text-3xl font-black text-blue-900 mb-2';
-                }
-
-                document.getElementById('modal-prize-text').textContent = winPrize.name;
-                document.getElementById('result-modal').classList.remove('hidden');
-                updateUI();
-            }, 5500);
-        }
-
-        document.getElementById('register-form').onsubmit = register;
-        document.getElementById('spin-button').onclick = spin;
-        document.getElementById('share-button').onclick = async () => {
-            if (currentUser.hasShared) return;
-            currentUser.turns++;
-            currentUser.hasShared = true;
-            const userRef = doc(db, `artifacts/${APP_ID}/public/data/users`, currentUser.phone);
-            await setDoc(userRef, { turns: currentUser.turns, hasShared: true }, { merge: true });
-            updateUI();
-            alert("Bạn nhận được thêm 01 lượt quay may mắn!");
-        };
-        document.getElementById('close-modal').onclick = () => {
-            document.getElementById('result-modal').classList.add('hidden');
-            document.getElementById('wheel-element').style.transition = 'none';
-            document.getElementById('wheel-element').style.transform = 'rotate(0deg)';
-            setTimeout(() => {
-                document.getElementById('wheel-element').style.transition = 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)';
-            }, 50);
-        };
-
-        init();
-    </script>
+    // Start app
+    init();
+</script>
 </body>
 </html>
